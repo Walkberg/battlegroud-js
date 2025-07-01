@@ -1,0 +1,21 @@
+{
+  "name": "battlegroud",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently npm --workspace apps/frontend run dev npm --workspace apps/backend run start:dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  },
+  "dependencies": {
+    "@nestjs/platform-socket.io": "^11.1.3",
+    "@nestjs/websockets": "^11.1.3",
+    "socket.io": "^4.8.1"
+  }
+}
