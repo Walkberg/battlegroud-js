@@ -17,7 +17,7 @@ export default function GamePhaseControls() {
 
   const handleChangePhase = (phase: GamePhase) => {
     if (!socket) return;
-    socket.emit("nextPhase", { phase });
+    socket.emit("nextPhase", { gameId: "game-123" });
   };
 
   useEffect(() => {

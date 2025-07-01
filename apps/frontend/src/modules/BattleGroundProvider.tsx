@@ -24,7 +24,9 @@ export const GameManagerProvider = ({
 }) => {
   const { socket, isConnected } = useSocket();
 
-  const [gameState] = useState<GameState>(() => createGameState(gameId));
+  const [gameState, setGameState] = useState<GameState>(() =>
+    createGameState(gameId)
+  );
   const [playerId] = useState<PlayerId>("player-abc");
 
   useEffect(() => {
@@ -40,6 +42,11 @@ export const GameManagerProvider = ({
 
     socket.on("playerLeft", ({ playerId }) => {
       console.log(`Player ${playerId} has left the game.`);
+    });
+
+    socket.on("game:state", (gameState: GameState) => {
+      console.log("Received game state:", gameState);
+      setGameState(gameState);
     });
 
     return () => {

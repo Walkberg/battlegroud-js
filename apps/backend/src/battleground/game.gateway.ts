@@ -70,9 +70,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
   ) {
     const game = this.battlegroundService.getGame(data.gameId);
-    if (!game) return;
 
-    console.log('nextPhase', game.phase);
+    if (!game) return;
 
     const next =
       game.phase === GamePhase.Recruitment
