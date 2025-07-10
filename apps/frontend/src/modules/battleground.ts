@@ -25,6 +25,8 @@ export interface Minion {
 }
 
 export interface Shop {
+  rerollCost: number;
+  upgradeCost: number;
   tier: number;
   minions: Minion[];
   frozen: boolean;
@@ -42,6 +44,7 @@ export interface Player {
   hero: Hero;
   health: number;
   board: Minion[];
+  hand: Minion[];
   shop: Shop;
   gold: number;
   tavernTier: number;
@@ -89,6 +92,7 @@ export function createGameState(gameId: string): GameState {
         createHero(),
         30,
         [],
+        [],
         createShop(1),
         3,
         1,
@@ -107,6 +111,7 @@ export function createPlayer(
   hero: Hero,
   health: number,
   board: Minion[],
+  hand: Minion[],
   shop: Shop,
   gold: number,
   tavernTier: number,
@@ -119,6 +124,7 @@ export function createPlayer(
     hero,
     health,
     board,
+    hand,
     shop,
     gold,
     tavernTier,

@@ -1,23 +1,16 @@
 import "./App.css";
-import { GameManagerProvider } from "./modules/BattleGroundProvider";
-import BattleGround from "./modules/Batttleground";
+import { AppProviders } from "./components/providers/AppProviders";
 import GamePhaseControls from "./modules/DevelopperGUI";
-import { FightProvider } from "./modules/Fight";
-import { SocketIOProvider } from "./modules/socketIO/SocketIoProvider";
 import { Leva } from "leva";
+import BattlegroundPage from "./modules/BatttlegroundPage";
 
 function App() {
   return (
-    <SocketIOProvider>
-      <GameManagerProvider gameId={"game-123"}>
-        <FightProvider>
-          {/* <Fight /> */}
-          <BattleGround />
-          <GamePhaseControls />
-          <Leva collapsed />
-        </FightProvider>
-      </GameManagerProvider>
-    </SocketIOProvider>
+    <AppProviders>
+      <BattlegroundPage />
+      <GamePhaseControls />
+      <Leva collapsed />
+    </AppProviders>
   );
 }
 

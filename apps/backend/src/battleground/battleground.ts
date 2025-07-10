@@ -1,3 +1,6 @@
+import { randomUUID } from 'crypto';
+import { create } from 'domain';
+
 export type PlayerId = string;
 
 export type MinionId = string;
@@ -25,6 +28,8 @@ export interface Minion {
 }
 
 export interface Shop {
+  rerollCost: number;
+  upgradeCost: number;
   tier: number;
   minions: Minion[];
   frozen: boolean;
@@ -42,6 +47,7 @@ export interface Player {
   hero: Hero;
   health: number;
   board: Minion[];
+  hand: Minion[];
   shop: Shop;
   gold: number;
   tavernTier: number;

@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import { Board, type Minion } from "./Batttleground";
+import type { Minion } from "./battleground";
 
 export default function Fight() {
-  const { opponentBoard, userBoard } = useFight();
+  const {} = useFight();
 
   return (
     <div className="p-4 font-mono bg-green-100 min-h-screen">
-      <Board board={opponentBoard} />
-      <Board board={userBoard} />
+      {/* <Board board={opponentBoard} />
+      <Board board={userBoard} /> */}
     </div>
   );
 }
@@ -21,15 +21,9 @@ type FightContextType = {
 
 const FightContext = createContext<FightContextType | undefined>(undefined);
 
-const initialTavern: Minion[] = [
-  { id: 1, name: "Rat", attack: 1, health: 1 },
-  { id: 2, name: "Murloc", attack: 2, health: 2 },
-  { id: 3, name: "Mech", attack: 3, health: 1 },
-];
-
 export function FightProvider({ children }: { children: ReactNode }) {
-  const [userBoard, setUserBoard] = useState<Minion[]>(initialTavern);
-  const [opponentBoard, setOpponentBoard] = useState<Minion[]>(initialTavern);
+  const [userBoard, setUserBoard] = useState<Minion[]>([]);
+  const [opponentBoard, setOpponentBoard] = useState<Minion[]>([]);
 
   return (
     <FightContext.Provider
