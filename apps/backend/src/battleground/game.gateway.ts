@@ -31,23 +31,28 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinGame')
-  handleJoinGame(
+  async handleJoinGame(
     @MessageBody() data: { gameId: string; playerId: string },
     @ConnectedSocket() client: Socket,
   ) {
     const { gameId, playerId } = data;
 
+    const game = await this.battlegroundService.addPlayerToGame(
+      gameId,
+      playerId,
+    );
     client.join(gameId);
-    const game = this.battlegroundService.addPlayerToGame(gameId, playerId);
 
-    client.to(gameId).emit('playerJoined', game);
-    this.server.to(data.gameId).emit('game:state', game);
+    console.log(game);
+
+    client.to(gameId).emit('playerJoined', game.toGameState());
+    this.server.to(data.gameId).emit('game:state', game.toGameState());
 
     return { status: 'ok', message: `Joined game ${gameId}` };
   }
 
   @SubscribeMessage('leaveGame')
-  handleLeaveGame(
+  async handleLeaveGame(
     @MessageBody() data: { gameId: string; playerId: string },
     @ConnectedSocket() client: Socket,
   ) {
@@ -55,7 +60,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.leave(gameId);
 
-    const game = this.battlegroundService.removePlayerFromGame(
+    const game = await this.battlegroundService.removePlayerFromGame(
       gameId,
       playerId,
     );
@@ -66,11 +71,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('nextPhase')
-  handleNextPhase(
+  async handleNextPhase(
     @MessageBody() data: { gameId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const game = this.battlegroundService.getGame(data.gameId);
+    const game = await this.battlegroundService.getGame(data.gameId);
 
     if (!game) return;
 
@@ -82,89 +87,89 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           : GamePhase.Recruitment;
 
     game.phase = next;
-    this.server.to(data.gameId).emit('game:state', game);
+    this.server.to(data.gameId).emit('game:state', game.toGameState());
 
     return { status: 'ok', game };
   }
 
   @SubscribeMessage('rerollShop')
-  handleRerollShop(
+  async handleRerollShop(
     @MessageBody() data: { gameId: string; playerId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const game = this.battlegroundService.rerollShop(
+    const game = await this.battlegroundService.rerollShop(
       data.gameId,
       data.playerId,
     );
     if (game) {
-      this.server.to(data.gameId).emit('game:state', game);
+      this.server.to(data.gameId).emit('game:state', game.toGameState());
     }
 
     return { status: 'ok', game };
   }
 
   @SubscribeMessage('upgradeShop')
-  handleUpgradeShop(
+  async handleUpgradeShop(
     @MessageBody() data: { gameId: string; playerId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const game = this.battlegroundService.upgradeShop(
+    const game = await this.battlegroundService.upgradeShop(
       data.gameId,
       data.playerId,
     );
     if (game) {
-      this.server.to(data.gameId).emit('game:state', game);
+      this.server.to(data.gameId).emit('game:state', game.toGameState());
     }
 
     return { status: 'ok', game };
   }
   @SubscribeMessage('buyMinion')
-  handleBuyMinion(
+  async handleBuyMinion(
     @MessageBody() data: { gameId: string; playerId: string; minionId: string },
     @ConnectedSocket() client: Socket,
   ) {
     console.log('buyMinion', data);
-    const game = this.battlegroundService.buyMinion(
+    const game = await this.battlegroundService.buyMinion(
       data.gameId,
       data.playerId,
       data.minionId,
     );
     console.log('buyMinion', game);
     if (game) {
-      this.server.to(data.gameId).emit('game:state', game);
+      this.server.to(data.gameId).emit('game:state', game.toGameState());
     }
 
     return { status: 'ok', game };
   }
 
   @SubscribeMessage('sellMinion')
-  handleSellMinion(
+  async handleSellMinion(
     @MessageBody() data: { gameId: string; playerId: string; minionId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const game = this.battlegroundService.sellMinion(
+    const game = await this.battlegroundService.sellMinion(
       data.gameId,
       data.playerId,
       data.minionId,
     );
     if (game) {
-      this.server.to(data.gameId).emit('game:state', game);
+      this.server.to(data.gameId).emit('game:state', game.toGameState());
     }
     return { status: 'ok', game };
   }
 
   @SubscribeMessage('playMinion')
-  handlePlayMinion(
+  async handlePlayMinion(
     @MessageBody() data: { gameId: string; playerId: string; minionId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const game = this.battlegroundService.playMinion(
+    const game = await this.battlegroundService.playMinion(
       data.gameId,
       data.playerId,
       data.minionId,
     );
     if (game) {
-      this.server.to(data.gameId).emit('game:state', game);
+      this.server.to(data.gameId).emit('game:state', game.toGameState());
     }
     return { status: 'ok', game };
   }

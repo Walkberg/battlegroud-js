@@ -113,8 +113,9 @@ export function MinionCard({ minion, onClick }: MinionCardProps) {
         className="border rounded p-2 shadow-md w-32 text-center bg-white cursor-pointer hover:bg-yellow-100 h-64"
         onClick={onClick}
       >
-        <h2 className="font-bold">{minion.name}</h2>
-        <p>
+        <h2 className="font-bold text-teal-400">{minion.name}</h2>
+
+        <p className="text-teal-700">
           ⚔️ {minion.stats.attack} / ❤️ {minion.stats.health}
         </p>
       </div>

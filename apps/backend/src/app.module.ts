@@ -5,6 +5,8 @@ import { MatchmakingService } from './matchmaking/matchmaking.service';
 import { MatchmakingGateway } from './matchmaking/matchmaking.gateway';
 import { MatchmakingRepositoryImpl } from './matchmaking/matchmaking.repository';
 import { MatchmakingRepository } from './matchmaking/matchmaking';
+import { BattlegroundRepository } from './battleground/battleground';
+import { BattlegroundRepositoryImpl } from './battleground/battleground.repository';
 
 @Module({
   imports: [],
@@ -16,6 +18,10 @@ import { MatchmakingRepository } from './matchmaking/matchmaking';
     {
       provide: MatchmakingRepository,
       useClass: MatchmakingRepositoryImpl,
+    },
+    {
+      provide: BattlegroundRepository,
+      useClass: BattlegroundRepositoryImpl,
     },
     MatchmakingGateway,
   ],

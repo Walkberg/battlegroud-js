@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { Minion, MinionId } from './battleground';
+import { allMinions } from './minions';
 
 interface PoolConfig {
   config: {
@@ -33,9 +34,10 @@ const basicPoolConfig: PoolConfig = {
   ],
 };
 
-interface Pool {
+export interface Pool {
   init(poolConfig: PoolConfig): void;
   registerMinion(minion: Minion): void;
+  registerMinions(minions: Minion[]): void;
   unregisterMinion(minionId: MinionId): void;
   getRandomMinionsForTier(tier: number, count: number): Minion[];
 }
@@ -49,6 +51,12 @@ function createPool(): Pool {
       throw new Error('Minion already registered');
     }
     minions.set(minion.id, minion);
+  }
+
+  function registerMinions(minionsToRegister: Minion[]): void {
+    for (const minion of minionsToRegister) {
+      registerMinion(minion);
+    }
   }
 
   function unregisterMinion(minionId: MinionId): void {
@@ -83,6 +91,7 @@ function createPool(): Pool {
   return {
     init,
     registerMinion,
+    registerMinions,
     unregisterMinion,
     getRandomMinionsForTier,
   };
@@ -90,47 +99,6 @@ function createPool(): Pool {
 
 export const pool = createPool();
 
-pool.registerMinion({
-  id: 'm1',
-  name: 'Alleycat',
-  tier: 1,
-  stats: { attack: 1, health: 1 },
-});
-pool.registerMinion({
-  id: 'm2',
-  name: 'Murloc Tidehunter',
-  tier: 1,
-  stats: { attack: 2, health: 1 },
-});
-pool.registerMinion({
-  id: 'm3',
-  name: 'Cool',
-  tier: 1,
-  stats: { attack: 1, health: 1 },
-});
-pool.registerMinion({
-  id: 'm4',
-  name: 'Mdr',
-  tier: 1,
-  stats: { attack: 1, health: 1 },
-});
-pool.registerMinion({
-  id: 'm5',
-  name: 'gglfdoi',
-  tier: 1,
-  stats: { attack: 1, health: 1 },
-});
-pool.registerMinion({
-  id: 'm6',
-  name: 'Kaboom Bot',
-  tier: 2,
-  stats: { attack: 2, health: 2 },
-});
-pool.registerMinion({
-  id: 'm7',
-  name: 'Cobalt Guardian',
-  tier: 3,
-  stats: { attack: 6, health: 3 },
-});
+pool.registerMinions(allMinions);
 
 pool.init(basicPoolConfig);

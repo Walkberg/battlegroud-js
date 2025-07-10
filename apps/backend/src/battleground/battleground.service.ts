@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import {
+  BattlegroundRepository,
   GameId,
   GamePhase,
   GameState,
@@ -9,164 +10,160 @@ import {
   PlayerId,
 } from './battleground';
 import { pool } from './pools';
+import { read } from 'fs';
+import { Battleground } from './battleground-game';
+import { PlayerEntity } from './player';
 
 @Injectable()
 export class BattlegroundService {
-  private games = new Map<GameId, GameState>();
+  constructor(
+    private readonly battlegroundRepository: BattlegroundRepository,
+  ) {}
 
-  getOrCreateGame(gameId: GameId): GameState {
-    if (!this.games.has(gameId)) {
-      this.games.set(gameId, createGameState(gameId));
-    }
-    return this.games.get(gameId)!;
-  }
+  async getOrCreateGame(gameId: GameId): Promise<Battleground> {
+    const game = await this.battlegroundRepository.findGameById(gameId);
 
-  getGame(gameId: GameId): GameState | undefined {
-    return this.games.get(gameId);
-  }
-
-  addPlayerToGame(gameId: GameId, playerId: PlayerId): GameState {
-    const game = this.getOrCreateGame(gameId);
-    if (!game.players.find((p) => p.id === playerId)) {
-      game.players.push(createPlayer(playerId));
+    if (!game) {
+      const newGame = createBattleground(gameId);
+      await this.battlegroundRepository.save(newGame);
+      return newGame;
     }
     return game;
   }
 
-  removePlayerFromGame(
+  async getGame(gameId: GameId): Promise<Battleground | null> {
+    return await this.battlegroundRepository.findGameById(gameId);
+  }
+
+  async addPlayerToGame(
+    gameId: GameId,
+    playerId: PlayerId,
+  ): Promise<Battleground> {
+    const game = await this.getOrCreateGame(gameId);
+
+    console.log(`Adding player ${playerId} to game ${gameId}`);
+
+    game.addPlayer(new PlayerEntity(playerId, createPlayer(playerId), game));
+
+    return game;
+  }
+
+  async removePlayerFromGame(
     gameId: GameId,
     playerId: string,
-  ): GameState | undefined {
-    const game = this.getGame(gameId);
+  ): Promise<Battleground | undefined> {
+    const game = await this.getGame(gameId);
+
     if (!game) return;
-    game.players = game.players.filter((p) => p.id !== playerId);
+
+    game.removePlayer(playerId);
     return game;
   }
 
-  updateGame(gameId: GameId, newState: Partial<GameState>) {
-    const game = this.getGame(gameId);
-    if (game) {
-      this.games.set(gameId, { ...game, ...newState });
-    }
-  }
-
-  rerollShop(gameId: GameId, playerId: PlayerId): GameState | undefined {
-    const game = this.games.get(gameId);
+  async rerollShop(
+    gameId: GameId,
+    playerId: PlayerId,
+  ): Promise<Battleground | undefined> {
+    const game = await this.getGame(gameId);
 
     if (!game) return;
 
-    const player = game.players.find((p) => p.id === playerId);
+    const player = game.getPlayer(playerId);
 
     if (!player) return;
 
-    const newMinions: Minion[] = pool.getRandomMinionsForTier(
-      player.tavernTier,
-      3,
-    );
-
-    player.shop.minions = newMinions;
-    player.gold -= 1;
-    player.shop.frozen = false;
+    player.rerollShop();
 
     return game;
   }
 
-  upgradeShop(gameId: GameId, playerId: PlayerId): GameState | undefined {
-    const game = this.games.get(gameId);
+  async upgradeShop(
+    gameId: GameId,
+    playerId: PlayerId,
+  ): Promise<Battleground | undefined> {
+    const game = await this.getGame(gameId);
 
     if (!game) return;
 
-    const player = game.players.find((p) => p.id === playerId);
+    const player = game.getPlayer(playerId);
 
     if (!player) return;
 
-    if (player.tavernTier < 6) {
-      player.tavernTier++;
-    }
+    player.upgradeShop();
 
     return game;
   }
 
-  buyMinion(
+  async buyMinion(
     gameId: GameId,
     playerId: PlayerId,
     minionId: string,
-  ): GameState | undefined {
-    const game = this.games.get(gameId);
+  ): Promise<Battleground | undefined> {
+    const game = await this.getGame(gameId);
 
     if (!game) return;
 
-    const player = game.players.find((p) => p.id === playerId);
+    const player = game.getPlayer(playerId);
 
     if (!player) return;
 
-    const minion = player.shop.minions.find((m) => m.id === minionId);
-
-    if (!minion) return;
-
-    if (player.gold < 3) return;
-
-    player.gold -= 3;
-
-    player.shop.minions = player.shop.minions.filter((m) => m.id !== minionId);
-    player.hand.push(minion);
+    player.buyMinion(minionId);
 
     return game;
   }
 
-  sellMinion(
+  async sellMinion(
     gameId: GameId,
     playerId: PlayerId,
     minionId: string,
-  ): GameState | undefined {
-    const game = this.games.get(gameId);
+  ): Promise<Battleground | undefined> {
+    const game = await this.getGame(gameId);
 
     if (!game) return;
 
-    const player = game.players.find((p) => p.id === playerId);
+    const player = game.getPlayer(playerId);
 
     if (!player) return;
 
-    const minion = player.board.find((m) => m.id === minionId);
-
-    if (!minion) return;
-
-    player.gold += 1;
-    player.board = player.board.filter((m) => m.id !== minionId);
+    player.sellMinion(minionId);
 
     return game;
   }
 
-  playMinion(
+  async playMinion(
     gameId: GameId,
     playerId: PlayerId,
     minionId: string,
-  ): GameState | undefined {
-    const game = this.games.get(gameId);
+  ): Promise<Battleground | undefined> {
+    const game = await this.getGame(gameId);
     if (!game) return;
 
-    const player = game.players.find((p) => p.id === playerId);
+    const player = game.getPlayer(playerId);
+
     if (!player) return;
 
-    const minion = player.hand.find((m) => m.id === minionId);
+    player.playMinion(minionId);
 
-    if (!minion) return;
+    // if (minion.onPlayEffect) {
+    //   minion.onPlayEffect(game, playerId, minionId);
+    // }
 
-    if (player.board.length >= 7) return;
-
-    player.hand = player.hand.filter((m) => m.id !== minionId);
-    player.board.push(minion);
     return game;
   }
 }
 
 function createGameState(gameId: string): GameState {
   return {
+    pool,
     id: gameId,
     players: [],
     currentTurn: 1,
     phase: GamePhase.Recruitment,
   };
+}
+
+function createBattleground(gameId: string): Battleground {
+  return new Battleground(gameId, pool);
 }
 
 function createPlayer(playerId: string): Player {

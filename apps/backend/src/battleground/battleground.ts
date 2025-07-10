@@ -1,5 +1,5 @@
-import { randomUUID } from 'crypto';
-import { create } from 'domain';
+import { Battleground } from './battleground-game';
+import { Pool } from './pools';
 
 export type PlayerId = string;
 
@@ -25,6 +25,12 @@ export interface Minion {
   name: string;
   tier: number;
   stats: Stats;
+
+  onPlayEffect?: (
+    game: GameState,
+    playerId: PlayerId,
+    minionId: MinionId,
+  ) => void;
 }
 
 export interface Shop {
@@ -62,8 +68,17 @@ export interface CombatResult {
 }
 
 export interface GameState {
+  pool: Pool;
   id: GameId;
   players: Player[];
   currentTurn: number;
   phase: GamePhase;
+}
+
+export abstract class BattlegroundRepository {
+  abstract findGameById(gameId: GameId): Promise<Battleground | null>;
+
+  abstract save(game: Battleground): Promise<void>;
+
+  abstract deleteGame(gameId: GameId): Promise<void>;
 }
